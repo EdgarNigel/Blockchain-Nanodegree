@@ -41,7 +41,7 @@ class Block {
             // Save in auxiliary variable the current block hash
             let hash = self.hash               
             // Recalculate the hash of the Block
-			let reHash = SHA256(JSON.stringify(self)).toString();
+			let reHash = SHA256(JSON.stringify({...self, hash: null})).toString();
             // Comparing if the hashes changed
 			if(hash != reHash) {
 				// Returning the Block is not valid
@@ -69,8 +69,9 @@ class Block {
         // Parse the data to an object to be retrieve.
 		return new Promise((resolve, reject) => {
         // Resolve with the data if the object isn't the Genesis block
-			let body = hex2ascii(JSON.parse(self.body))
-			if(self.height != 0) {
+			let decoded = hex2ascii(self.body)
+			let body = JSON.parse(decoded)
+			if(self.height > 0) {
 				resolve(body)
 			} else {
 				reject("Error: Genesis Block")

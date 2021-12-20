@@ -65,22 +65,21 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-			let currentChainHeight = await this.getChainHeight()
-			console.log(currentChainHeight)
-			if (currentChainHeight >= 0) {
-				block.previousBlockHash = self.chain[self.height].hash;
-			}
-			block.time = new Date().getTime().toString().slice(0,-3);
-			console.log(block.time)
-			block.height = self.chain.length
-			console.log(block.height)
-			block.hash = SHA256(JSON.stringify(block)).toString();
-			if (block.validate()) {
-				console.log(block.hash)
-				self.height += 1;
-				resolve(self.chain.push(block));
-			} else {
-				console.log("error")
+			try {
+				let currentChainHeight = await this.getChainHeight()
+				console.log(currentChainHeight)
+				if (currentChainHeight >= 0) {
+					block.previousBlockHash = self.chain[self.height].hash
+				}
+				block.time = new Date().getTime().toString().slice(0,-3)
+				console.log(block.time)
+				block.height = self.chain.length
+				block.hash = SHA256(JSON.stringify(block)).toString()
+				self.chain.push(block)
+				self.height = self.chain.length - 1
+				resolve(block)
+			} catch (e) {
+				console.log(e)
 				reject(new Error('Error adding block'));
 			}
         });
@@ -121,13 +120,16 @@ class Blockchain {
         let self = this;
         return new Promise(async (resolve, reject) => {
             const messageTime = parseInt(message.split(':')[1]);
-			console.log(messageTime)
 			const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-			if (currentTime - messageTime < 300) {
-				if (bitcoinMessage.verify(message, address, signature)) {
-					let block = new BlockClass.Block({data: {star, address}})
-					resolve(await self._addBlock(block));
-				} else {
+			if (currentTime - messageTime < 30000) {
+				try {
+					if (bitcoinMessage.verify(message, address, signature)) {
+						let block = new BlockClass.Block({data: {star, address}})
+						console.log(messageTime)
+						const finalBlock = await self._addBlock(block)
+						resolve(finalBlock);
+					} 
+				} catch (e) {
 					reject(new Error('Verification error'))
 				}
 			} else {
@@ -176,8 +178,8 @@ class Blockchain {
         let self = this;
         let stars = [];
         return new Promise((resolve, reject) => {
-            self.chain.forEach((block) => {
-				let blockDecoded = block.getBData()
+            self.chain.forEach(async (block) => {
+				let blockDecoded = await block.getBData()
 				if (blockDecoded.address === address) {
 					stars.push(blockDecoded.star)
 				}
@@ -196,14 +198,19 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-			self.chain.forEach((block) => {
-				if (!block.validate()) {
-					errorLog.push(`Block ${block.height.toString()} failed to validate.`)
-				} else if (!(block.previousBlockHash === self.getBlockByHeight(block.height - 1))) {
-					errorLog.push(`Block ${block.heigth.toString()} is invalid`)
-				}
-			})
-			resolve(errorLog)
+			try {
+				self.chain.forEach(async(block) => {
+					if (!await block.validate()) {
+						errorLog.push(`Block ${block.height.toString()} failed to validate.`)
+					} 
+					if (!(block.previousBlockHash === self.chain[self.chain.length - 1].hash)) {
+						errorLog.push(`Block ${block.height.toString()}' previous block hash is invalid`)
+					}
+				})
+				resolve(errorLog)
+			} catch (e) {
+				reject(e)
+			}
         });
     }
 
