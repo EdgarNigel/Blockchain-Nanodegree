@@ -77,7 +77,10 @@ class Blockchain {
 				block.hash = SHA256(JSON.stringify(block)).toString()
 				self.chain.push(block)
 				self.height = self.chain.length - 1
-				resolve(block)
+				let validated = await self.validateChain()
+				if (validated) {
+					resolve(block)
+				}
 			} catch (e) {
 				console.log(e)
 				reject(new Error('Error adding block'));
@@ -121,7 +124,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const messageTime = parseInt(message.split(':')[1]);
 			const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-			if (currentTime - messageTime < 30000) {
+			if (currentTime - messageTime < 300) {
 				try {
 					if (bitcoinMessage.verify(message, address, signature)) {
 						let block = new BlockClass.Block({data: {star, address}})
