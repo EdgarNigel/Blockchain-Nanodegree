@@ -206,7 +206,8 @@ class Blockchain {
 					if (!await block.validate()) {
 						errorLog.push(`Block ${block.height.toString()} failed to validate.`)
 					} 
-					if (!(block.previousBlockHash === self.chain[self.chain.length - 1].hash)) {
+					const blockIndex = self.chain.indexOf(block) - 1
+					if (!(block.previousBlockHash === self.chain[blockIndex].hash)) {
 						errorLog.push(`Block ${block.height.toString()}' previous block hash is invalid`)
 					}
 				})
