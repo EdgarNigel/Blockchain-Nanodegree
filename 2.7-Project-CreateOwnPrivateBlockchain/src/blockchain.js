@@ -183,8 +183,9 @@ class Blockchain {
         return new Promise((resolve, reject) => {
             self.chain.forEach(async (block) => {
 				let blockDecoded = await block.getBData()
-				if (blockDecoded.address === address) {
-					stars.push(blockDecoded.star)
+				console.log(blockDecoded)
+				if (blockDecoded.data.address === address) {
+					stars.push(blockDecoded.data.star)
 				}
 			})
 			resolve(stars)
@@ -207,7 +208,7 @@ class Blockchain {
 						errorLog.push(`Block ${block.height.toString()} failed to validate.`)
 					} 
 					const blockIndex = self.chain.indexOf(block) - 1
-					if (!(block.previousBlockHash === self.chain[blockIndex].hash)) {
+					if (blockIndex > 0 && !(block.previousBlockHash === self.chain[blockIndex].hash)) {
 						errorLog.push(`Block ${block.height.toString()}' previous block hash is invalid`)
 					}
 				})

@@ -73,9 +73,7 @@ class Block {
 			let body = JSON.parse(decoded)
 			if(self.height > 0) {
 				resolve(body)
-			} else {
-				reject("Error: Genesis Block")
-			}
+			} 
 		})
     }
 }
