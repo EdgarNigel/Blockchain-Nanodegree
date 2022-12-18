@@ -53,16 +53,12 @@ contract('SupplyChain', function(accounts) {
         await event.watch((err, res) => {
             eventEmitted = true
         })
-        //Add farmer role to address
-        await supplyChain.addFarmer(originFarmerID);
-
         // Mark an item as Harvested by calling function harvestItem()
         await supplyChain.harvestItem(upc, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        const resultBufferOne = await supplyChain.fetchItemBufferOne(upc)
-        const resultBufferTwo = await supplyChain.fetchItemBufferTwo(upc)
-        console.log(sku)
+        const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
         // Verify the result set
         assert.equal(resultBufferOne[0].toNumber(), sku, 'Error: Invalid item SKU')
         assert.equal(resultBufferOne[1], upc, 'Error: Invalid item UPC')
