@@ -36,7 +36,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     Shipped,    // 5
     Received,   // 6
     Purchased   // 7
-    }
+  }
 
   State constant defaultState = State.Harvested;
 
@@ -163,23 +163,24 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
   function harvestItem(uint _upc, address _originFarmerID, string _originFarmName, string _originFarmInformation, string  _originFarmLatitude, string  _originFarmLongitude, string  _productNotes) public 
   {
     // Add the new item as part of Harvest
-    items[_upc] = Item(
-      sku,
-      _upc,
-      msg.sender,
-      _originFarmerID,
-      _originFarmName,
-      _originFarmInformation,
-      _originFarmLatitude,
-      _originFarmLongitude,
-      _upc + sku,
-      _productNotes, 
-      0,
-      State.Harvested,
-      address(0),
-      address(0), 
-      address(0)
-    );
+    items[_upc] = Item({
+      sku: sku,
+      upc: _upc,
+      ownerID: msg.sender,
+      originFarmerID: _originFarmerID,
+      originFarmName: _originFarmName,
+      originFarmInformation: _originFarmInformation,
+      originFarmLatitude: _originFarmLatitude,
+      originFarmLongitude: _originFarmLongitude,
+      productID: sku + _upc,
+      productNotes: _productNotes,
+      productPrice: 0,
+      itemState: defaultState,
+      distributorID: address(0),
+      retailerID: address(0),
+      consumerID: address(0)       
+    });
+
     // Increment sku
     sku = sku + 1;
     // Emit the appropriate event
@@ -194,7 +195,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
   verifyCaller(items[_upc].originFarmerID)
   {
     // Update the appropriate fields
-    items[_upc].itemState == State.Processed;
+    items[_upc].itemState = State.Processed;
     // Emit the appropriate event
     emit Processed(_upc);
   }
@@ -207,7 +208,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
   verifyCaller(items[_upc].originFarmerID)
   {
     // Update the appropriate fields
-    items[_upc].itemState == State.Packed;
+    items[_upc].itemState = State.Packed;
     // Emit the appropriate event
     emit Packed(_upc);
   }
@@ -220,7 +221,8 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
   verifyCaller(items[_upc].originFarmerID)
   {
     // Update the appropriate fields
-    items[_upc].itemState == State.ForSale;
+    items[_upc].itemState = State.ForSale;
+    items[_upc].productPrice = _price;
     // Emit the appropriate event
     emit ForSale(_upc);
   }
@@ -238,9 +240,9 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     {
     
     // Update the appropriate fields - ownerID, distributorID, itemState
-    items[_upc].ownerID == msg.sender;
-    items[_upc].distributorID == msg.sender;
-    items[_upc].itemState == State.Sold;
+    items[_upc].ownerID = msg.sender;
+    items[_upc].distributorID = msg.sender;
+    items[_upc].itemState = State.Sold;
     // Transfer money to farmer
     items[_upc].originFarmerID.transfer(items[_upc].productPrice);
     // emit the appropriate event
@@ -256,7 +258,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     verifyCaller(items[_upc].distributorID)
     {
     // Update the appropriate fields
-    items[_upc].itemState == State.Shipped;
+    items[_upc].itemState = State.Shipped;
     // Emit the appropriate event
     emit Shipped(_upc);
   }
@@ -269,9 +271,9 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     // Access Control List enforced by calling Smart Contract / DApp
     {
     // Update the appropriate fields - ownerID, retailerID, itemState
-    items[_upc].ownerID == msg.sender;
-    items[_upc].retailerID == msg.sender;
-    items[_upc].itemState == State.Received;
+    items[_upc].ownerID = msg.sender;
+    items[_upc].retailerID = msg.sender;
+    items[_upc].itemState = State.Received;
     // Emit the appropriate event
     emit Received(_upc);
   }
@@ -284,9 +286,9 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     // Access Control List enforced by calling Smart Contract / DApp
     {
     // Update the appropriate fields - ownerID, consumerID, itemState
-    items[_upc].ownerID == msg.sender;
-    items[_upc].consumerID == msg.sender;
-    items[_upc].itemState == State.Purchased;
+    items[_upc].ownerID = msg.sender;
+    items[_upc].consumerID = msg.sender;
+    items[_upc].itemState = State.Purchased;
     // Emit the appropriate event
     emit Purchased(_upc); 
   }
@@ -313,7 +315,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     originFarmInformation = items[_upc].originFarmInformation;  // Farmer Information
     originFarmLatitude = items[_upc].originFarmLatitude; // Farm Latitude
     originFarmLongitude = items[_upc].originFarmLongitude;  // Farm Longitude 
-    
+
   return 
   (
   itemSKU,
@@ -347,7 +349,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole, Fa
     productID = items[_upc].productID; 
     productNotes = items[_upc].productNotes; 
     productPrice = items[_upc].productPrice; 
-    itemState = uint8(items[_upc].itemState); 
+    itemState = uint(items[_upc].itemState); 
     distributorID = items[_upc].distributorID; 
     retailerID = items[_upc].retailerID;  
     consumerID = items[_upc].consumerID; 
